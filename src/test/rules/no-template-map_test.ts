@@ -1,6 +1,6 @@
 /**
  * @fileoverview Disallows array `.map` in templates
- * @author James Garbutt <htttps://github.com/43081j>
+ * @author James Garbutt <https://github.com/43081j>
  */
 
 //------------------------------------------------------------------------------
@@ -16,7 +16,8 @@ import {RuleTester} from 'eslint';
 
 const ruleTester = new RuleTester({
   parserOptions: {
-    sourceType: 'module'
+    sourceType: 'module',
+    ecmaVersion: 2015
   }
 });
 
@@ -32,7 +33,7 @@ ruleTester.run('no-template-map', rule, {
       code: 'html`foo ${a.map(i => i)}`',
       errors: [
         {
-          message: '`.map` is disallowed in templates, move the expression out of the template instead',
+          messageId: 'noMap',
           line: 1,
           column: 12
         }
@@ -42,7 +43,7 @@ ruleTester.run('no-template-map', rule, {
       code: 'html`foo ${a.map(i => html`bar ${i}`)}`',
       errors: [
         {
-          message: '`.map` is disallowed in templates, move the expression out of the template instead',
+          messageId: 'noMap',
           line: 1,
           column: 12
         }
@@ -52,7 +53,7 @@ ruleTester.run('no-template-map', rule, {
       code: 'html`foo ${a.b.c.map(i => i)}`',
       errors: [
         {
-          message: '`.map` is disallowed in templates, move the expression out of the template instead',
+          messageId: 'noMap',
           line: 1,
           column: 12
         }
@@ -62,7 +63,7 @@ ruleTester.run('no-template-map', rule, {
       code: 'html`foo ${[1, 2, 3].map(i => i)}`',
       errors: [
         {
-          message: '`.map` is disallowed in templates, move the expression out of the template instead',
+          messageId: 'noMap',
           line: 1,
           column: 12
         }

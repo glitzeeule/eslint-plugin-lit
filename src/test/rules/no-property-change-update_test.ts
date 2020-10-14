@@ -1,6 +1,6 @@
 /**
  * @fileoverview Disallows property changes in the `update` lifecycle method
- * @author James Garbutt <htttps://github.com/43081j>
+ * @author James Garbutt <https://github.com/43081j>
  */
 
 //------------------------------------------------------------------------------
@@ -16,9 +16,12 @@ import {RuleTester} from 'eslint';
 
 const ruleTester = new RuleTester({
   parserOptions: {
-    sourceType: 'module'
+    sourceType: 'module',
+    ecmaVersion: 2015
   }
 });
+
+const babelParser = require.resolve('babel-eslint');
 
 ruleTester.run('no-property-change-update', rule, {
   valid: [
@@ -51,7 +54,7 @@ ruleTester.run('no-property-change-update', rule, {
       }`
     },
     {
-      parser: 'babel-eslint',
+      parser: babelParser,
       code: `class Foo extends LitElement {
         @property({ type: String })
         prop = 'test';
@@ -74,14 +77,14 @@ ruleTester.run('no-property-change-update', rule, {
       }`,
       errors: [
         {
-          message: 'Properties should not be changed in the update lifecycle method as they will not trigger re-renders',
+          messageId: 'propertyChange',
           line: 6,
           column: 11
         }
       ]
     },
     {
-      parser: 'babel-eslint',
+      parser: babelParser,
       code: `class Foo extends LitElement {
         @property({ type: String })
         prop = 'foo';
@@ -91,7 +94,7 @@ ruleTester.run('no-property-change-update', rule, {
       }`,
       errors: [
         {
-          message: 'Properties should not be changed in the update lifecycle method as they will not trigger re-renders',
+          messageId: 'propertyChange',
           line: 5,
           column: 11
         }
@@ -108,7 +111,7 @@ ruleTester.run('no-property-change-update', rule, {
       }`,
       errors: [
         {
-          message: 'Properties should not be changed in the update lifecycle method as they will not trigger re-renders',
+          messageId: 'propertyChange',
           line: 6,
           column: 11
         }

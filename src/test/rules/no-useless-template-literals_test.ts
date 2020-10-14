@@ -1,6 +1,6 @@
 /**
  * @fileoverview Disallows redundant literal values in templates
- * @author James Garbutt <htttps://github.com/43081j>
+ * @author James Garbutt <https://github.com/43081j>
  */
 
 //------------------------------------------------------------------------------
@@ -16,15 +16,13 @@ import {RuleTester} from 'eslint';
 
 const ruleTester = new RuleTester({
   parserOptions: {
-    sourceType: 'module'
+    sourceType: 'module',
+    ecmaVersion: 2015
   }
 });
 
 ruleTester.run('no-useless-template-literals', rule, {
-  valid: [
-    {code: 'html`foo ${someVar} bar`'},
-    {code: 'html`foo bar`'}
-  ],
+  valid: [{code: 'html`foo ${someVar} bar`'}, {code: 'html`foo bar`'}],
 
   invalid: [
     {

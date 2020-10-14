@@ -1,6 +1,6 @@
 /**
  * @fileoverview Disallows invalid HTML in templates
- * @author James Garbutt <htttps://github.com/43081j>
+ * @author James Garbutt <https://github.com/43081j>
  */
 
 //------------------------------------------------------------------------------
@@ -16,15 +16,19 @@ import {RuleTester} from 'eslint';
 
 const ruleTester = new RuleTester({
   parserOptions: {
-    sourceType: 'module'
+    sourceType: 'module',
+    ecmaVersion: 2015
   }
 });
 
 ruleTester.run('no-invalid-html', rule, {
   valid: [
-    {code: 'html`<x-foo bar bar></x-foo>`'}, // Duplicate attrs rule handles this
+    // Duplicate attrs rule handles this
+    {code: 'html`<x-foo bar bar></x-foo>`'},
     {code: 'html`foo bar`'},
-    {code: 'html`<x-foo bar=${true}></x-foo>`'}
+    {code: 'html`<x-foo bar=${true}></x-foo>`'},
+    {code: 'html`<hr>`'},
+    {code: 'html`<hr />`'}
   ],
 
   invalid: [
@@ -32,7 +36,8 @@ ruleTester.run('no-invalid-html', rule, {
       code: 'html`<x-foo />`',
       errors: [
         {
-          message: 'Template contained invalid HTML syntax, error was: non-void-html-element-start-tag-with-trailing-solidus',
+          messageId: 'parseError',
+          data: {err: 'non-void-html-element-start-tag-with-trailing-solidus'},
           line: 1,
           column: 5
         }
@@ -42,7 +47,10 @@ ruleTester.run('no-invalid-html', rule, {
       code: 'html`<x-foo attr=">`',
       errors: [
         {
-          message: 'Template contained invalid HTML syntax, error was: eof-in-tag',
+          messageId: 'parseError',
+          data: {
+            err: 'eof-in-tag'
+          },
           line: 1,
           column: 5
         }
@@ -52,7 +60,8 @@ ruleTester.run('no-invalid-html', rule, {
       code: 'html`<x-foo invalid"attr=${true}></x-foo>`',
       errors: [
         {
-          message: 'Template contained invalid HTML syntax, error was: unexpected-character-in-attribute-name',
+          messageId: 'parseError',
+          data: {err: 'unexpected-character-in-attribute-name'},
           line: 1,
           column: 5
         }
@@ -62,7 +71,8 @@ ruleTester.run('no-invalid-html', rule, {
       code: 'html`<x-foo></x-foo attr>`',
       errors: [
         {
-          message: 'Template contained invalid HTML syntax, error was: end-tag-with-attributes',
+          messageId: 'parseError',
+          data: {err: 'end-tag-with-attributes'},
           line: 1,
           column: 5
         }
@@ -72,7 +82,8 @@ ruleTester.run('no-invalid-html', rule, {
       code: 'html`<x-foo attr=${true}><x-bar foo="${true}></x-bar></x-foo>`',
       errors: [
         {
-          message: 'Template contained invalid HTML syntax, error was: eof-in-tag',
+          messageId: 'parseError',
+          data: {err: 'eof-in-tag'},
           line: 1,
           column: 44
         }
@@ -82,7 +93,8 @@ ruleTester.run('no-invalid-html', rule, {
       code: 'html`<x-foo x=5y=6></x-foo>`',
       errors: [
         {
-          message: 'Template contained invalid HTML syntax, error was: unexpected-character-in-unquoted-attribute-value',
+          messageId: 'parseError',
+          data: {err: 'unexpected-character-in-unquoted-attribute-value'},
           line: 1,
           column: 5
         }

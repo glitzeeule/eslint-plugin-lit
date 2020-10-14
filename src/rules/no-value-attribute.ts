@@ -1,11 +1,12 @@
 /**
- * @fileoverview Disallows unencoded HTML entities in attribute values
+ * @fileoverview Detects usages of the `value` attribute
  * @author James Garbutt <https://github.com/43081j>
  */
 
 import {Rule} from 'eslint';
 import * as ESTree from 'estree';
 import {TemplateAnalyzer} from '../template-analyzer';
+import {isExpressionPlaceholder} from '../util';
 
 //------------------------------------------------------------------------------
 // Rule Definition
@@ -14,22 +15,24 @@ import {TemplateAnalyzer} from '../template-analyzer';
 const rule: Rule.RuleModule = {
   meta: {
     docs: {
-      description: 'Disallows unencoded HTML entities in attribute values',
+      description:
+        'Detects usages of the `value` attribute where the ' +
+        'equivalent property should be used instead',
       category: 'Best Practices',
-      recommended: true,
       url:
-        'https://github.com/43081j/eslint-plugin-lit/blob/master/docs/rules/attribute-value-entities.md'
+        'https://github.com/43081j/eslint-plugin-lit/blob/master/docs/rules/no-value-attribute.md'
     },
     messages: {
-      unencoded:
-        'Attribute values may not contain unencoded HTML ' +
-        'entities, e.g. use `&gt;` instead of `>`'
+      preferProperty:
+        'The `value` attribute only defines the initial value ' +
+        'rather than permanently binding; you should set the `value` ' +
+        'property instead via `.value`'
     }
   },
 
   create(context): Rule.RuleListener {
     // variables should be defined here
-    const disallowedPattern = /([<>"]|&(?!(#\d+|[a-z]+);))/;
+    const warnedTags = ['input'];
 
     //----------------------------------------------------------------------
     // Helpers
@@ -50,19 +53,17 @@ const rule: Rule.RuleModule = {
 
           analyzer.traverse({
             enterElement: (element): void => {
-              // eslint-disable-next-line guard-for-in
-              for (const attr in element.attribs) {
-                const loc = analyzer.getLocationForAttribute(element, attr);
-                const rawValue = analyzer.getRawAttributeValue(element, attr);
+              if (
+                warnedTags.includes(element.tagName) &&
+                'value' in element.attribs &&
+                isExpressionPlaceholder(element.attribs['value'])
+              ) {
+                const loc = analyzer.getLocationForAttribute(element, 'value');
 
-                if (!loc || !rawValue) {
-                  continue;
-                }
-
-                if (disallowedPattern.test(rawValue)) {
+                if (loc) {
                   context.report({
                     loc: loc,
-                    messageId: 'unencoded'
+                    messageId: 'preferProperty'
                   });
                 }
               }

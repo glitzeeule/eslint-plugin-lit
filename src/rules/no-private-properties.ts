@@ -1,6 +1,6 @@
 /**
- * @fileoverview Disallows unencoded HTML entities in attribute values
- * @author James Garbutt <https://github.com/43081j>
+ * @fileoverview Disallows usages of "non-public" property bindings
+ * @author Michael Stramel <https://github.com/stramel>
  */
 
 import {Rule} from 'eslint';
@@ -14,22 +14,41 @@ import {TemplateAnalyzer} from '../template-analyzer';
 const rule: Rule.RuleModule = {
   meta: {
     docs: {
-      description: 'Disallows unencoded HTML entities in attribute values',
+      description: 'Disallows usages of "non-public" property bindings',
       category: 'Best Practices',
-      recommended: true,
       url:
-        'https://github.com/43081j/eslint-plugin-lit/blob/master/docs/rules/attribute-value-entities.md'
+        'https://github.com/43081j/eslint-plugin-lit/blob/master/docs/rules/no-private-properties.md'
     },
     messages: {
-      unencoded:
-        'Attribute values may not contain unencoded HTML ' +
-        'entities, e.g. use `&gt;` instead of `>`'
-    }
+      unsupported: 'TODO'
+    },
+    schema: [
+      {
+        type: 'object',
+        properties: {
+          private: {type: 'string', minLength: 1, format: 'regex'},
+          protected: {type: 'string', minLength: 1, format: 'regex'}
+        },
+        additionalProperties: false,
+        minProperties: 1
+      }
+    ]
   },
 
   create(context): Rule.RuleListener {
     // variables should be defined here
-    const disallowedPattern = /([<>"]|&(?!(#\d+|[a-z]+);))/;
+    const config: Partial<{private: string; protected: string}> =
+      context.options[0] || {};
+    const conventions = Object.entries(config).reduce<Record<string, RegExp>>(
+      (acc, [key, value]) => {
+        if (value) {
+          acc[key] = new RegExp(value);
+        }
+        return acc;
+      },
+      {}
+    );
+    const conventionRegexes = Object.values(conventions);
 
     //----------------------------------------------------------------------
     // Helpers
@@ -53,16 +72,24 @@ const rule: Rule.RuleModule = {
               // eslint-disable-next-line guard-for-in
               for (const attr in element.attribs) {
                 const loc = analyzer.getLocationForAttribute(element, attr);
-                const rawValue = analyzer.getRawAttributeValue(element, attr);
 
-                if (!loc || !rawValue) {
+                if (!loc) {
                   continue;
                 }
 
-                if (disallowedPattern.test(rawValue)) {
+                const hasPropertyBinding = '.' === attr.slice(0, 1);
+                if (!hasPropertyBinding) {
+                  continue;
+                }
+
+                const invalidPropertyName = conventionRegexes.some(
+                  (convention) => convention.test(attr.slice(1))
+                );
+
+                if (invalidPropertyName) {
                   context.report({
-                    loc: loc,
-                    messageId: 'unencoded'
+                    loc,
+                    messageId: 'unsupported'
                   });
                 }
               }

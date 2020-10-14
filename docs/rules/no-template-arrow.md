@@ -1,6 +1,6 @@
-# Disallows arrow functions and `.bind` in templates (no-template-bind)
+# Disallows arrow functions in templates (no-template-arrow)
 
-Passing function expressions into templates will result in them
+Passing inline functions into templates will result in them
 being created every time a render occurs, resulting in performance
 loss.
 
@@ -18,14 +18,13 @@ As lit will automatically bind it to the correct context.
 
 ## Rule Details
 
-This rule disallows using function expressions and `.bind` in templates.
+This rule disallows using inline functions in templates.
 
 The following patterns are considered warnings:
 
 ```ts
 html`<x-foo @event=${() => {}}>`;
 html`<x-foo @event=${function() { }}>`;
-html`<x-foo @event=${this.someMethod.bind(this)}>`;
 ```
 
 The following patterns are not warnings:

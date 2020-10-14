@@ -1,6 +1,6 @@
 /**
  * @fileoverview Disallows invalid binding positions in templates
- * @author James Garbutt <htttps://github.com/43081j>
+ * @author James Garbutt <https://github.com/43081j>
  */
 
 import {Rule} from 'eslint';
@@ -16,7 +16,8 @@ const rule: Rule.RuleModule = {
       description: 'Disallows invalid binding positions in templates',
       category: 'Best Practices',
       recommended: true,
-      url: 'https://github.com/43081j/eslint-plugin-lit/blob/master/docs/rules/binding-positions.md'
+      url:
+        'https://github.com/43081j/eslint-plugin-lit/blob/master/docs/rules/binding-positions.md'
     }
   },
 
@@ -24,24 +25,43 @@ const rule: Rule.RuleModule = {
     // variables should be defined here
     const tagPattern = /<\/?$/;
     const attrPattern = /^=/;
+    const selfClosingPattern = /^\/>/;
 
     //----------------------------------------------------------------------
     // Helpers
     //----------------------------------------------------------------------
+    /**
+     * Determines if a given TemplateElement is contained within
+     * a HTML comment.
+     *
+     * @param {ESTree.TemplateElement=} expr Expression to test
+     * @return {boolean}
+     */
+    function isInsideComment(
+      expr: ESTree.TemplateElement | undefined
+    ): boolean {
+      return (
+        expr !== undefined &&
+        expr !== null &&
+        expr.value.raw.lastIndexOf('<!--') > expr.value.raw.lastIndexOf('-->')
+      );
+    }
 
     //----------------------------------------------------------------------
     // Public
     //----------------------------------------------------------------------
 
     return {
-      'TaggedTemplateExpression': (node: ESTree.Node): void => {
-        if (node.type === 'TaggedTemplateExpression' &&
+      TaggedTemplateExpression: (node: ESTree.Node): void => {
+        if (
+          node.type === 'TaggedTemplateExpression' &&
           node.tag.type === 'Identifier' &&
-          node.tag.name === 'html') {
+          node.tag.name === 'html'
+        ) {
           for (let i = 0; i < node.quasi.expressions.length; i++) {
             const expr = node.quasi.expressions[i];
             const prev = node.quasi.quasis[i];
-            const next = node.quasi.quasis[i+1];
+            const next = node.quasi.quasis[i + 1];
             if (tagPattern.test(prev.value.raw)) {
               context.report({
                 node: expr,
@@ -51,6 +71,18 @@ const rule: Rule.RuleModule = {
               context.report({
                 node: expr,
                 message: 'Bindings cannot be used in place of attribute names.'
+              });
+            } else if (next && selfClosingPattern.test(next.value.raw)) {
+              context.report({
+                node: expr,
+                message:
+                  'Bindings at the end of a self-closing tag must be' +
+                  ' followed by a space or quoted'
+              });
+            } else if (isInsideComment(prev)) {
+              context.report({
+                node: expr,
+                message: 'Bindings cannot be used inside HTML comments.'
               });
             }
           }

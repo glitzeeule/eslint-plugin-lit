@@ -1,5 +1,5 @@
 /**
- * @fileoverview Disallows array `.map` in templates
+ * @fileoverview Disallows arrow functions in templates
  * @author James Garbutt <https://github.com/43081j>
  */
 
@@ -13,15 +13,16 @@ import * as ESTree from 'estree';
 const rule: Rule.RuleModule = {
   meta: {
     docs: {
-      description: 'Disallows array `.map` in templates',
+      description: 'Disallows arrow functions in templates',
       category: 'Best Practices',
       url:
-        'https://github.com/43081j/eslint-plugin-lit/blob/master/docs/rules/no-template-map.md'
+        'https://github.com/43081j/eslint-plugin-lit/blob/master/docs/rules/no-template-arrow.md'
     },
     messages: {
-      noMap:
-        '`.map` is disallowed in templates, move the expression out' +
-        ' of the template instead'
+      noArrow:
+        'Arrow functions must not be used in templates, ' +
+        'a method should be passed directly like `${this.myMethod}` as it ' +
+        'will be bound automatically.'
     }
   },
 
@@ -31,6 +32,32 @@ const rule: Rule.RuleModule = {
     //----------------------------------------------------------------------
     // Helpers
     //----------------------------------------------------------------------
+
+    /**
+     * Determines whether a node is a disallowed expression
+     * or not.
+     *
+     * @param {ESTree.Node} node
+     * @return {boolean}
+     */
+    function isDisallowedExpr(node: ESTree.Node): boolean {
+      if (
+        node.type === 'ArrowFunctionExpression' ||
+        node.type === 'FunctionExpression'
+      ) {
+        return true;
+      }
+
+      if (node.type === 'ConditionalExpression') {
+        return (
+          isDisallowedExpr(node.test) ||
+          isDisallowedExpr(node.consequent) ||
+          isDisallowedExpr(node.alternate)
+        );
+      }
+
+      return false;
+    }
 
     //----------------------------------------------------------------------
     // Public
@@ -44,15 +71,10 @@ const rule: Rule.RuleModule = {
           node.tag.name === 'html'
         ) {
           for (const expr of node.quasi.expressions) {
-            if (
-              expr.type === 'CallExpression' &&
-              expr.callee.type === 'MemberExpression' &&
-              expr.callee.property.type === 'Identifier' &&
-              expr.callee.property.name === 'map'
-            ) {
+            if (isDisallowedExpr(expr)) {
               context.report({
                 node: expr,
-                messageId: 'noMap'
+                messageId: 'noArrow'
               });
             }
           }
